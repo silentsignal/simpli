@@ -32,8 +32,10 @@ MATH_OPS = {
         'add': ('+', operator.__add__),
         'and': ('&', operator.__and__),
         'div': ('/', operator.__div__),
+        'mul': ('*', operator.__mul__),
         'shl': ('<<', operator.__lshift__),
         'shr': ('>>', operator.__rshift__),
+        'sub': ('-', operator.__sub__),
         }
 
 class Tracer(object):
