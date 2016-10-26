@@ -38,6 +38,14 @@ MATH_OPS = {
         'sub': ('-', operator.__sub__),
         }
 
+CONDITIONS = {
+        'nez': ('!= null', False),
+        'ge':  ('>=', True),
+        'gt':  ('>',  True),
+        'le':  ('<=', True),
+        'lt':  ('<',  True),
+        }
+
 class Tracer(object):
     level = 0
     variables = 0
@@ -158,17 +166,12 @@ class Tracer(object):
             elif isn == 'sget-object':
                 local_variables[p1] = 'get ' + p2
             elif isn.startswith('if-'):
-                if isn.endswith('-nez'):
-                    self.trace(T.blue('if ({0} != null) goto {1}'.format(decode_op(p1), p2)))
-                elif isn.endswith('-ge'):
+                op_re, has_params = CONDITIONS[isn[3:]]
+                if has_params:
                     o1, o2 = p1.split(', ', 1)
-                    self.trace(T.blue('if ({0} >= {1}) goto {2}'.format(decode_op(o1), decode_op(o2), p2)))
-                elif isn.endswith('-lt'):
-                    o1, o2 = p1.split(', ', 1)
-                    self.trace(T.blue('if ({0} < {1}) goto {2}'.format(decode_op(o1), decode_op(o2), p2)))
+                    self.trace(T.blue('if ({0} {1} {2}) goto {3}'.format(decode_op(o1), op_re, decode_op(o2), p2)))
                 else:
-                    raise NotImplementedError
-                    #trace(level * '  ' + repr(m.groups()))
+                    self.trace(T.blue('if ({0} {1}) goto {2}'.format(decode_op(p1), op_re, p2)))
             elif isn == 'aput-byte':
                 value, array = p1.split(', ', 1)
                 self.trace(T.blue('{array}[{index}] = {value}'.format(array=array, value=value, index=p2)))
