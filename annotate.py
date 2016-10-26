@@ -182,6 +182,14 @@ class Tracer(object):
         # TODO m.end()
 
 
+class PrintTracer(Tracer):
+    def trace(self, text):
+        pass
+
+    def trace_body(self, smali, start, end, params, local_variables):
+        print smali[start:end].strip('\n')
+
+
 if __name__ == '__main__':
     from sys import argv
     cn = 'Tracer' if len(argv) <= 2 else argv[2]
