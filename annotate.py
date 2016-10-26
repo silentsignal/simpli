@@ -16,7 +16,7 @@ T = Terminal()
 
 def main():
     parser = ArgumentParser(description='Performs primitive Dalvik symbolic execution')
-    parser.add_argument('entry_point', metavar='Lhu/silentsignal/class;->method(I)I',
+    parser.add_argument('entry_point', metavar='La/b;->method(I)I',
             help='entry point for symbolic execution')
     parser.add_argument('--tracer', dest='tracer_class', metavar='TracerClass',
             default='Tracer', help='tracer class to instantiate')
