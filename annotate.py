@@ -83,13 +83,16 @@ class Tracer(object):
                 m = END_RE.search(smali, pos)
                 return self.trace_body(smali, pos, m.start(), params, local_variables)
 
-    def trace_body(self, smali, start, end, params, local_variables):
+    def trace_body(self, smali, start, end, params, local_variables, orig_start=None):
         def decode_op(op):
             if op.startswith('p'):
                 return params[int(op[1:])]
             elif op.startswith('v'):
                 return local_variables[op]
             raise ValueError('Invalid operand ' + repr(op))
+
+        if orig_start is None:
+            orig_start = start
 
         last_lv = {}
         for m in INS_RE.finditer(smali, start, end):
@@ -172,9 +175,18 @@ class Tracer(object):
                     self.trace(T.blue('if ({0} {1} {2}) goto {3}'.format(decode_op(o1), op_re, decode_op(o2), p2)))
                 else:
                     self.trace(T.blue('if ({0} {1}) goto {2}'.format(decode_op(p1), op_re, p2)))
+                self.trace(T.cyan('--- If jump is taken: ---'))
+                jump = smali.find('\n    ' + p2, orig_start, end)
+                self.level += 1
+                self.trace_body(smali, jump, end, params, local_variables.copy(), orig_start=orig_start)
+                self.level -= 1
+                self.trace(T.cyan('--- If jump is not taken: ---'))
             elif isn == 'aput-byte':
                 value, array = p1.split(', ', 1)
                 self.trace(T.blue('{array}[{index}] = {value}'.format(array=array, value=value, index=p2)))
+            elif isn == 'goto':
+                jump = smali.find('\n    ' + p2, orig_start, end)
+                return self.trace_body(smali, jump, end, params, local_variables.copy(), orig_start=orig_start)
             else:
                 raise NotImplementedError
                 #trace(level * '  ' + repr(m.groups()))
