@@ -213,6 +213,9 @@ class Tracer(object):
             elif isn == 'aput-byte':
                 value, array = p1.split(', ', 1)
                 self.trace(T.blue('{array}[{index}] = {value}'.format(array=array, value=decode_op(value), index=decode_op(p2))))
+            elif isn == 'aget-byte':
+                value, array = p1.split(', ', 1)
+                local_variables[value] = '{array}[{index}]'.format(array=array, index=decode_op(p2))
             elif isn == 'goto':
                 jump = smali.find('\n    ' + p2, orig_start, end)
                 return self.trace_body(smali, jump, end, params, local_variables.copy(), orig_start=orig_start)
