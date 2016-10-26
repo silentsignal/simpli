@@ -20,8 +20,12 @@ def main():
             help='entry point for symbolic execution')
     parser.add_argument('--tracer', dest='tracer_class', metavar='TracerClass',
             default='Tracer', help='tracer class to instantiate')
+    parser.add_argument('--trace-locals', dest='trace_locals', action='store_true',
+            default=False, help='trace changes in local variables')
+    parser.add_argument('--show-instructions', dest='show_insn', action='store_true',
+            default=False, help='show instructions with byte offsets')
     args = parser.parse_args()
-    globals()[args.tracer_class]().trace_fun(args.entry_point)
+    globals()[args.tracer_class](args).trace_fun(args.entry_point)
 
 class StringValue(object):
     def __init__(self, value):
@@ -59,6 +63,9 @@ CONDITIONS = {
 class Tracer(object):
     level = 0
     variables = 0
+
+    def __init__(self, args):
+        self.args = args
 
     def trace(self, text):
         print self.level * '  ' + text
@@ -107,7 +114,8 @@ class Tracer(object):
         last_lv = {}
         for m in INS_RE.finditer(smali, start, end):
             isn, p1, p2 = m.groups()
-            self.trace(str(m.start()) + ' @ ' + repr(m.groups())[:80])
+            if self.args.show_insn:
+                self.trace(str(m.start()) + ' @ ' + repr(m.groups())[:80])
             if isn.startswith('invoke-'):
                 cp = []
                 if len(p1) > 2:
@@ -197,9 +205,10 @@ class Tracer(object):
                 return self.trace_body(smali, jump, end, params, local_variables.copy(), orig_start=orig_start)
             else:
                 raise NotImplementedError
-            if local_variables and last_lv != local_variables:
-                self.trace(T.green(repr(local_variables)))
-                last_lv = local_variables.copy()
+            if self.args.trace_locals:
+                if local_variables and last_lv != local_variables:
+                    self.trace(T.green(repr(local_variables)))
+                    last_lv = local_variables.copy()
         # TODO m.end()
 
 
