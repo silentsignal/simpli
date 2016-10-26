@@ -100,11 +100,9 @@ class Tracer(object):
             self.trace(str(m.start()) + ' @ ' + repr(m.groups())[:80])
             if isn.startswith('invoke-'):
                 cp = []
-                #trace(p1, p2)
                 if len(p1) > 2:
                     for iparam in p1[1:-1].split(', '):
                         cp.append(decode_op(iparam))
-                #trace(isn, p1, cp)
                 instance = None if isn.endswith('static') else cp.pop(0)
                 self.level += 1
                 result = self.trace_fun(p2, cp, instance)
@@ -189,11 +187,9 @@ class Tracer(object):
                 return self.trace_body(smali, jump, end, params, local_variables.copy(), orig_start=orig_start)
             else:
                 raise NotImplementedError
-                #trace(level * '  ' + repr(m.groups()))
             if local_variables and last_lv != local_variables:
                 self.trace(T.green(repr(local_variables)))
                 last_lv = local_variables.copy()
-            #self.trace('')
         # TODO m.end()
 
 
