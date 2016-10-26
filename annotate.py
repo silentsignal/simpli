@@ -3,6 +3,7 @@
 from mmap import mmap, ACCESS_READ
 from contextlib import closing
 from blessings import Terminal
+from argparse import ArgumentParser
 import re, operator
 
 FUN_RE = re.compile('L(.+?);->(.+)$')
@@ -12,6 +13,15 @@ END_RE = re.compile(br'\.end method', re.MULTILINE)
 PARAM_RE = re.compile(r'\[*(?:L.+?;|[^L])')
 
 T = Terminal()
+
+def main():
+    parser = ArgumentParser(description='Performs primitive Dalvik symbolic execution')
+    parser.add_argument('entry_point', metavar='Lhu/silentsignal/class;->method(I)I',
+            help='entry point for symbolic execution')
+    parser.add_argument('--tracer', dest='tracer_class', metavar='TracerClass',
+            default='Tracer', help='tracer class to instantiate')
+    args = parser.parse_args()
+    globals()[args.tracer_class]().trace_fun(args.entry_point)
 
 class StringValue(object):
     def __init__(self, value):
@@ -202,6 +212,4 @@ class PrintTracer(Tracer):
 
 
 if __name__ == '__main__':
-    from sys import argv
-    cn = 'Tracer' if len(argv) <= 2 else argv[2]
-    globals()[cn]().trace_fun(argv[1])
+    main()
