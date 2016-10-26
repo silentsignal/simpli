@@ -152,7 +152,7 @@ class Tracer(object):
                 return SimpleResult(value)
             elif isn.startswith('move-result'):
                 local_variables[p2] = last_result
-            elif isn.startswith('const/') or isn == 'const':
+            elif isn.startswith('const/') or isn.startswith('const-wide/') or isn == 'const':
                 local_variables[p1] = int(p2, 16)
             elif isn == 'const-string':
                 local_variables[p1] = StringValue(p2[1:-1])
