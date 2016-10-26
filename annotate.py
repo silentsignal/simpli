@@ -3,7 +3,7 @@
 from mmap import mmap, ACCESS_READ
 from contextlib import closing
 from blessings import Terminal
-import re
+import re, operator
 
 FUN_RE = re.compile('L(.+?);->(.+)$')
 FNP_RE = re.compile(r'^(.+?)\((.*)\)(.+)$')
@@ -27,6 +27,14 @@ class StringValue(object):
 class SimpleResult(object):
     def __init__(self, value):
         self.value = value
+
+MATH_OPS = {
+        'add': ('+', operator.__add__),
+        'and': ('&', operator.__and__),
+        'div': ('/', operator.__div__),
+        'shl': ('<<', operator.__lshift__),
+        'shr': ('>>', operator.__rshift__),
+        }
 
 class Tracer(object):
     level = 0
@@ -110,48 +118,32 @@ class Tracer(object):
                 local_variables[p1] = int(p2, 16)
             elif isn == 'const-string':
                 local_variables[p1] = StringValue(p2[1:-1])
-            elif isn == 'add-int/2addr':
-                dt = decode_op(p1)
-                ds = decode_op(p2)
-                if isinstance(dt, int) and isinstance(ds, int):
-                    local_variables[p1] = dt + ds
-                else:
-                    local_variables[p1] = '({s} + {d})'.format(s=ds, d=dt)
-            elif isn == 'add-int':
+            elif isn.endswith('-int') and isn.split('-', 1)[0] in MATH_OPS:
+                op_re, op_fn = MATH_OPS[isn.split('-', 1)[0]]
                 target, source = p1.split(', ', 1)
                 ds = decode_op(source)
                 dd = decode_op(p2)
                 if isinstance(ds, int) and isinstance(dd, int):
-                    local_variables[target] = ds + dd
+                    local_variables[target] = op_fn(ds, dd)
                 else:
-                    local_variables[target] = '({s} + {d})'.format(s=ds, d=decode_op(p2))
-            elif isn.startswith('and-int/lit'):
-                target, source = p1.split(', ', 1)
-                local_variables[target] = '({s} & {d})'.format(s=ds, d=int(p2, 16))
-            elif isn.startswith('add-int/lit'):
-                target, source = p1.split(', ', 1)
-                ds = decode_op(source)
-                dd = int(p2, 16)
-                if isinstance(ds, int):
-                    local_variables[target] = ds + dd
+                    local_variables[target] = '({s} {o} {d})'.format(s=ds, o=op_re, d=decode_op(p2))
+            elif '-int/2addr' in isn and isn.split('-', 1)[0] in MATH_OPS:
+                op_re, op_fn = MATH_OPS[isn.split('-', 1)[0]]
+                dt = decode_op(p1)
+                ds = decode_op(p2)
+                if isinstance(dt, int) and isinstance(ds, int):
+                    local_variables[p1] = op_fn(dt, ds)
                 else:
-                    local_variables[target] = '({s} + {d})'.format(s=ds, d=dd)
-            elif isn.startswith('div-int/lit'):
+                    local_variables[p1] = '({s} {o} {d})'.format(s=ds, o=op_re, d=dt)
+            elif '-int/lit' in isn and isn.split('-', 1)[0] in MATH_OPS:
+                op_re, op_fn = MATH_OPS[isn.split('-', 1)[0]]
                 target, source = p1.split(', ', 1)
                 ds = decode_op(source)
                 dd = int(p2, 16)
                 if isinstance(ds, int):
-                    local_variables[target] = ds / dd
+                    local_variables[target] = op_fn(ds, dd)
                 else:
-                    local_variables[target] = '({s} / {d})'.format(s=ds, d=dd)
-            elif isn.startswith('shl-int/lit'):
-                target, source = p1.split(', ', 1)
-                ds = decode_op(source)
-                dd = int(p2, 16)
-                if isinstance(ds, int):
-                    local_variables[target] = ds << dd
-                else:
-                    local_variables[target] = '({s} << {d})'.format(s=ds, d=dd)
+                    local_variables[target] = '({s} {o} {d})'.format(s=ds, o=op_re, d=dd)
             elif isn == 'new-array':
                 target, size = p1.split(', ', 1)
                 local_variables[target] = 'new {t}[{s}]'.format(t=p2[-1], s=decode_op(size))
