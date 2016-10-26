@@ -3,7 +3,8 @@
 from mmap import mmap, ACCESS_READ
 from contextlib import closing
 from blessings import Terminal
-from argparse import ArgumentParser
+from argparse import ArgumentParser, FileType
+from itertools import imap
 import re, operator
 
 FUN_RE = re.compile('L(.+?);->(.+)$')
@@ -24,6 +25,8 @@ def main():
             default=False, help='trace changes in local variables')
     parser.add_argument('--show-instructions', dest='show_insn', action='store_true',
             default=False, help='show instructions with byte offsets')
+    parser.add_argument('--alias-file', dest='alias_file', metavar='a.txt',
+            type=FileType('r'), nargs='?', help='read function aliases from this file')
     args = parser.parse_args()
     globals()[args.tracer_class](args).trace_fun(args.entry_point)
 
@@ -66,11 +69,19 @@ class Tracer(object):
 
     def __init__(self, args):
         self.args = args
+        self.aliases = {}
+        if args.alias_file:
+            for line in args.alias_file:
+                source, target = line.rstrip().split('\t', 1)
+                self.aliases[source] = target
 
     def trace(self, text):
         print self.level * '  ' + text
 
     def trace_fun(self, function, params=None, instance=None):
+        alias = self.aliases.get(function)
+        if alias is not None:
+            return SimpleResult('{a}({p})'.format(a=alias, p=', '.join(imap(str, params))))
         cls, meth = FUN_RE.match(function).groups()
         name, param_list, retval_type = FNP_RE.match(meth).groups()
         param_types = PARAM_RE.findall(param_list)
