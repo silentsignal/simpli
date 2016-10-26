@@ -215,7 +215,7 @@ class Tracer(object):
                 jump = smali.find('\n    ' + p2, orig_start, end)
                 return self.trace_body(smali, jump, end, params, local_variables.copy(), orig_start=orig_start)
             else:
-                raise NotImplementedError
+                raise NotImplementedError(m.group(0))
             if self.args.trace_locals:
                 if local_variables and last_lv != local_variables:
                     self.trace(T.green(repr(local_variables)))
