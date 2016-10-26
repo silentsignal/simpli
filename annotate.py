@@ -57,6 +57,7 @@ MATH_OPS = {
 
 CONDITIONS = {
         'nez': ('!= null', False),
+        'ne':  ('!=', True),
         'ge':  ('>=', True),
         'gt':  ('>',  True),
         'le':  ('<=', True),
