@@ -184,4 +184,5 @@ class Tracer(object):
 
 if __name__ == '__main__':
     from sys import argv
-    Tracer().trace_fun(argv[1])
+    cn = 'Tracer' if len(argv) <= 2 else argv[2]
+    globals()[cn]().trace_fun(argv[1])
