@@ -198,6 +198,13 @@ class Tracer(object):
                 local_variables[p1] = 'new ' + p2
             elif isn == 'sget-object':
                 local_variables[p1] = 'get ' + p2
+            elif isn == 'iget':
+                target, instance = p1.split(', ', 1)
+                local_variables[target] = 'get {i}.{f}'.format(i=instance, f=p2)
+            elif isn == 'iput':
+                value, instance = p1.split(', ', 1)
+                self.trace(T.magenta('put {value} to {instance}.{field}'.format(
+                    value=value, instance=instance, field=p2)))
             elif isn.startswith('if-'):
                 op_re, has_params = CONDITIONS[isn[3:]]
                 if has_params:
