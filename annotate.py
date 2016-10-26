@@ -46,13 +46,13 @@ class SimpleResult(object):
         self.value = value
 
 MATH_OPS = {
-        'add': ('+', operator.__add__),
-        'and': ('&', operator.__and__),
-        'div': ('/', operator.__div__),
-        'mul': ('*', operator.__mul__),
-        'shl': ('<<', operator.__lshift__),
-        'shr': ('>>', operator.__rshift__),
-        'sub': ('-', operator.__sub__),
+        'add': ('+', operator.__add__, 0),
+        'and': ('&', operator.__and__, None),
+        'div': ('/', operator.__div__, 1),
+        'mul': ('*', operator.__mul__, 1),
+        'shl': ('<<', operator.__lshift__, 0),
+        'shr': ('>>', operator.__rshift__, 0),
+        'sub': ('-', operator.__sub__, 0),
         }
 
 CONDITIONS = {
@@ -157,7 +157,7 @@ class Tracer(object):
             elif isn == 'const-string':
                 local_variables[p1] = StringValue(p2[1:-1])
             elif isn.endswith('-int') and isn.split('-', 1)[0] in MATH_OPS:
-                op_re, op_fn = MATH_OPS[isn.split('-', 1)[0]]
+                op_re, op_fn, identity = MATH_OPS[isn.split('-', 1)[0]]
                 target, source = p1.split(', ', 1)
                 ds = decode_op(source)
                 dd = decode_op(p2)
@@ -166,7 +166,7 @@ class Tracer(object):
                 else:
                     local_variables[target] = '({s} {o} {d})'.format(s=ds, o=op_re, d=decode_op(p2))
             elif '-int/2addr' in isn and isn.split('-', 1)[0] in MATH_OPS:
-                op_re, op_fn = MATH_OPS[isn.split('-', 1)[0]]
+                op_re, op_fn, identity = MATH_OPS[isn.split('-', 1)[0]]
                 dt = decode_op(p1)
                 ds = decode_op(p2)
                 if isinstance(dt, int) and isinstance(ds, int):
@@ -174,12 +174,14 @@ class Tracer(object):
                 else:
                     local_variables[p1] = '({s} {o} {d})'.format(s=ds, o=op_re, d=dt)
             elif '-int/lit' in isn and isn.split('-', 1)[0] in MATH_OPS:
-                op_re, op_fn = MATH_OPS[isn.split('-', 1)[0]]
+                op_re, op_fn, identity = MATH_OPS[isn.split('-', 1)[0]]
                 target, source = p1.split(', ', 1)
                 ds = decode_op(source)
                 dd = int(p2, 16)
                 if isinstance(ds, int):
                     local_variables[target] = op_fn(ds, dd)
+                elif dd == identity:
+                    local_variables[target] = ds
                 else:
                     local_variables[target] = '({s} {o} {d})'.format(s=ds, o=op_re, d=dd)
             elif isn == 'new-array':
