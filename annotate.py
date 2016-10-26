@@ -54,6 +54,7 @@ MATH_OPS = {
         'shr':  ('>>', operator.__rshift__, 0, False),
         'sub':  ('-',  operator.__sub__,    0, False),
         'rsub': ('-',  operator.__sub__,    0,  True),
+        'rem':  ('%',  operator.__mod__, None, False),
         }
 
 CONDITIONS = {
