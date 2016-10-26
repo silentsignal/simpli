@@ -55,8 +55,6 @@ class Tracer(object):
         self.trace(T.yellow(function) + ' // (' + repr(instance) + ') ' + repr(params))
         if cls.startswith('java'):
             if function == 'Ljava/lang/String;->length()I':
-                #if isinstance(instance, str) and str[0] == '"' and str[-1] == '"':
-                #    return len(
                 if isinstance(instance, StringValue):
                     return SimpleResult(len(instance.value))
                 return SimpleResult('strlen({0})'.format(instance))
