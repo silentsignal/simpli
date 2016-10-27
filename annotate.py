@@ -57,6 +57,8 @@ MATH_OPS = {
         'rem':  ('%',  operator.__mod__, None, False),
         }
 
+MATH_OPS_2ADDR_RE = re.compile('^(?:' + '|'.join(MATH_OPS.iterkeys()) + ')-(?:int|long)/2addr$')
+
 CONDITIONS = {
         'nez': ('!= null', False),
         'ne':  ('!=', True),
@@ -170,7 +172,7 @@ class Tracer(object):
                     local_variables[target] = op_fn(ds, dd)
                 else:
                     local_variables[target] = '({s} {o} {d})'.format(s=ds, o=op_re, d=decode_op(p2))
-            elif '-int/2addr' in isn and isn.split('-', 1)[0] in MATH_OPS:
+            elif MATH_OPS_2ADDR_RE.match(isn):
                 op_re, op_fn, identity, rev = MATH_OPS[isn.split('-', 1)[0]]
                 if rev:
                     raise NotImplementedError(isn)
