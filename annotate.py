@@ -260,5 +260,18 @@ class PrintTracer(Tracer):
         print smali[start:end].strip('\n')
 
 
+class CallGraphTracer(Tracer):
+    def trace_body(self, smali, start, end, params, local_variables):
+        for m in INS_RE.finditer(smali, start, end):
+            isn, p1, p2 = m.groups()
+            if self.args.show_insn:
+                self.trace(str(m.start()) + ' @ ' + repr(m.groups())[:80])
+            if isn.startswith('invoke-'):
+                self.level += 1
+                self.trace_fun(p2, [], None)
+                self.level -= 1
+
+
+
 if __name__ == '__main__':
     main()
