@@ -151,6 +151,10 @@ class Tracer(object):
                 value = local_variables[p2]
                 self.trace(T.red('return {0}'.format(value)))
                 return SimpleResult(value)
+            elif isn == 'return-wide':
+                value = local_variables[p2]
+                self.trace(T.red('return {0} [wide]'.format(value)))
+                return SimpleResult(value)
             elif isn == 'return-object':
                 value = local_variables[p2]
                 if value == 0:
@@ -210,10 +214,10 @@ class Tracer(object):
                 local_variables[p1] = 'new ' + p2
             elif isn == 'sget-object':
                 local_variables[p1] = 'get ' + p2
-            elif isn == 'iget':
+            elif isn.startswith('iget'):
                 target, instance = p1.split(', ', 1)
                 local_variables[target] = 'get {i}.{f}'.format(i=instance, f=p2)
-            elif isn == 'iput':
+            elif isn.startswith('iput'):
                 value, instance = p1.split(', ', 1)
                 self.trace(T.magenta('put {value} to {instance}.{field}'.format(
                     value=value, instance=instance, field=p2)))
