@@ -181,9 +181,9 @@ class Tracer(object):
                 dt = decode_op(p1)
                 ds = decode_op(p2)
                 if isinstance(dt, int) and isinstance(ds, int) and op_fn is not None:
-                    local_variables[p1] = op_fn(dt, ds)
+                    local_variables[p1] = op_fn(ds, dt)
                 else:
-                    local_variables[p1] = '({s} {o} {d})'.format(s=ds, o=op_re, d=dt)
+                    local_variables[p1] = '({d} {o} {s})'.format(s=ds, o=op_re, d=dt)
             elif '-int/lit' in isn and isn.split('-', 1)[0] in MATH_OPS:
                 op_re, op_fn, identity, rev = MATH_OPS[isn.split('-', 1)[0]]
                 target, source = p1.split(', ', 1)
