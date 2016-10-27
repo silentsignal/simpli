@@ -55,6 +55,8 @@ MATH_OPS = {
         'sub':  ('-',  operator.__sub__,    0, False),
         'rsub': ('-',  operator.__sub__,    0,  True),
         'rem':  ('%',  operator.__mod__, None, False),
+        'ushl': ('<<<', None,               0, False),
+        'ushr': ('>>>', None,               0, False),
         }
 
 MATH_OPS_2ADDR_RE = re.compile('^(?:' + '|'.join(MATH_OPS.iterkeys()) + ')-(?:int|long)/2addr$')
@@ -168,7 +170,7 @@ class Tracer(object):
                 target, source = p1.split(', ', 1)
                 ds = decode_op(source)
                 dd = decode_op(p2)
-                if isinstance(ds, int) and isinstance(dd, int):
+                if isinstance(ds, int) and isinstance(dd, int) and op_fn is not None:
                     local_variables[target] = op_fn(ds, dd)
                 else:
                     local_variables[target] = '({s} {o} {d})'.format(s=ds, o=op_re, d=decode_op(p2))
@@ -178,7 +180,7 @@ class Tracer(object):
                     raise NotImplementedError(isn)
                 dt = decode_op(p1)
                 ds = decode_op(p2)
-                if isinstance(dt, int) and isinstance(ds, int):
+                if isinstance(dt, int) and isinstance(ds, int) and op_fn is not None:
                     local_variables[p1] = op_fn(dt, ds)
                 else:
                     local_variables[p1] = '({s} {o} {d})'.format(s=ds, o=op_re, d=dt)
@@ -189,7 +191,7 @@ class Tracer(object):
                 dd = int(p2, 16)
                 if rev:
                     ds, dd = dd, ds
-                if isinstance(ds, int) and isinstance(dd, int):
+                if isinstance(ds, int) and isinstance(dd, int) and op_fn is not None:
                     local_variables[target] = op_fn(ds, dd)
                 elif dd == identity:
                     local_variables[target] = ds
